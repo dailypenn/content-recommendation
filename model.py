@@ -3,16 +3,34 @@ from gensim.models import Doc2Vec, TaggedDocument
 from gensim.utils import simple_preprocess
 from sklearn.model_selection import train_test_split
 import collections
+import re
+import requests
 
 # function to make TaggedDocuments for training. set tags to article name (can also use id)
 def create_tagged_document(articles):
     for i, article in enumerate(articles):
         yield TaggedDocument(words=simple_preprocess(article['content']), tags=article['name'])
 
-# Load articles from JSON file (or however we are storing it after webscraping)
-filepath = 'articles.json'
-with open(filepath, 'r') as f:
-    articles = json.load(f)
+#load json files
+SECTIONS = ['news', 'sports', 'opinion']
+PAGES = 10
+
+def clean_text(txt):
+    clean = re.compile('(<.*?>)|(&nbsp;)|(&amp;)')
+    return re.sub(clean, '', txt)
+
+tagged_articles = []
+
+def scrape_data():
+    for section in SECTIONS:
+       for page in range(PAGES):
+           resp = requests.get(f'https://www.thedp.com/section/{section}.json?page={page + 1}').json()
+           articles = resp['articles']
+           for article in articles:
+                cleaned_article = clean_text(article['content'])
+                articles = json.load(cleaned_article)
+                tagged_articles.append()
+
 
 tagged_articles = list(create_tagged_document(articles))
 
@@ -35,7 +53,7 @@ for doc_id in range(len(train_vectors)):
     sims = model.dv.most_similar([inferred_vector], topn=len(model.dv))
     rank = [docid for docid, sim in sims].index(doc_id)
     ranks.append(rank)
-
     second_ranks.append(sims[1])
 
 counter = collections.Counter(ranks)
+print(counter)
