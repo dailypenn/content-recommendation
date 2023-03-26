@@ -2,6 +2,7 @@ import json
 from gensim.models import Doc2Vec, TaggedDocument
 from gensim.utils import simple_preprocess
 from sklearn.model_selection import train_test_split
+import collections
 
 # function to make TaggedDocuments for training. set tags to article name (can also use id)
 def create_tagged_document(articles):
@@ -26,3 +27,15 @@ model.train(tagged_articles, total_examples=model.corpus_count, epochs=model.epo
 # are we just loading the tagged vectors to the db, or should we run like KNN or KMeans ML model?
 train_vectors = [model.infer_vector(article.words) for article, _ in train_articles]
 test_vectors = [model.infer_vector(articles.words) for article, _ in test_articles]
+
+ranks = []
+second_ranks = []
+for doc_id in range(len(train_vectors)):
+    inferred_vector = model.infer_vector(train_vectors[doc_id].words)
+    sims = model.dv.most_similar([inferred_vector], topn=len(model.dv))
+    rank = [docid for docid, sim in sims].index(doc_id)
+    ranks.append(rank)
+
+    second_ranks.append(sims[1])
+
+counter = collections.Counter(ranks)
