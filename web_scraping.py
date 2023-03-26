@@ -16,3 +16,5 @@ def scrape_data():
            for article in articles:
                 cleaned_article = clean_text(article['content'])
                 slug = article['slug']
+
+# pipn run
