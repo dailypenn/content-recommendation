@@ -8,12 +8,13 @@ from sklearn.model_selection import train_test_split
 
 
 # function to make TaggedDocuments for training. set tags to article name (can also use id)
-def create_tagged_document(article):
-    return TaggedDocument(words=simple_preprocess(article['content']), tags=article['slug'])
+def create_tagged_document(article, tags):
+    return TaggedDocument(words=simple_preprocess(article), tags={tags})
 
 #load json files
 SECTIONS = ['news', 'sports', 'opinion']
-PAGES = 10
+PAGES = 1
+ids = []
 
 def clean_text(txt):
     clean = re.compile('(<.*?>)|(&nbsp;)|(&amp;)')
@@ -23,20 +24,21 @@ tagged_articles = []
 
 def scrape_data():
     for section in SECTIONS:
-       # get max number of pages
        resp = requests.get(f'https://www.thedp.com/section/{section}.json?page=1').json()
        num_pages = resp['pagination']['last']
        print(num_pages)
        for page in range(1, num_pages+1):
            resp = requests.get(f'https://www.thedp.com/section/{section}.json?page={page + 1}').json()
-           articles = resp['articles']
-           print(len(articles))
-           for article in articles:
+           curr_page = resp['articles']
+           for article in curr_page:
                 cleaned_article = clean_text(article['content'])
-                print(type(cleaned_article))
-                tagged_articles.append(create_tagged_document(cleaned_article))
+                tagged_articles.append(create_tagged_document(cleaned_article, article['id']))
+                ids.append(article['id'])
 
-print(len(tagged_articles))
+scrape_data()
+print(len(ids))
+
+
 # split data
 train_articles, test_articles = train_test_split(tagged_articles, test_size=0.2)
 
@@ -44,11 +46,19 @@ train_articles, test_articles = train_test_split(tagged_articles, test_size=0.2)
 model = Doc2Vec(vector_size=100, min_count=3, epochs=60, min_alpha=0.001, alpha=0.025)
 model.build_vocab(tagged_articles)
 model.train(tagged_articles, total_examples=model.corpus_count, epochs=model.epochs)
+print("corp count", model.corpus_count)
+# for id in ids:
+#     print(model.dv[id])
 
+# print(train_articles)
 train_vectors = [model.infer_vector(article.words) for article in train_articles]
 test_vectors = [model.infer_vector(article.words) for article in test_articles]
 
-# testing
+print(len(train_vectors))
+print(len(test_vectors))
+
+
+import collections
 ranks = []
 second_ranks = []
 # print(len(model.dv))
