@@ -1,6 +1,7 @@
 import collections
 import re
 import requests
+import datetime
 from gensim.models import Doc2Vec
 from gensim.models.doc2vec import TaggedDocument
 from gensim.utils import simple_preprocess
@@ -21,6 +22,9 @@ def clean_text(txt):
     return re.sub(clean, '', txt)
 
 tagged_articles = []
+
+def convert_to_timestamp(str_time):
+    return int(datetime.datetime.strptime(str_time, "%Y-%m-%d %H:%M:%S").timestamp())
 
 def scrape_data():
     for section in SECTIONS:
