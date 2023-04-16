@@ -66,8 +66,7 @@ for idx, doc_id in enumerate(train_articles):
     # print('docid:', doc_id)
     inferred_vector = model.infer_vector(train_articles[idx].words)
     sims = model.dv.most_similar([inferred_vector])
-    # print(sims)
-    rank = [docid for docid, sim in sims].index(list(train_articles[idx].tags)[0])
+    rank = [docid for docid, _ in sims].index(list(train_articles[idx].tags)[0])
     ranks.append(rank)
     second_ranks.append(sims[1])
 
