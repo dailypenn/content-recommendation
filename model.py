@@ -21,13 +21,12 @@ def clean_text(txt):
 
 tagged_articles = []
 
-
 def scrape_data():
     for section in SECTIONS:
        # get max number of pages
        resp = requests.get(f'https://www.thedp.com/section/{section}.json?page=1').json()
        num_pages = resp['pagination']['last']
-       
+       print(num_pages)
        for page in range(1, num_pages+1):
            resp = requests.get(f'https://www.thedp.com/section/{section}.json?page={page + 1}').json()
            articles = resp['articles']
@@ -42,22 +41,26 @@ print(len(tagged_articles))
 train_articles, test_articles = train_test_split(tagged_articles, test_size=0.2)
 
 # train the Doc2Vec - need to tweak vector_size hyperparameter
-model = Doc2Vec(vector_size=50, min_count=3, epochs=30)
-model.build_vocab(train_articles)
+model = Doc2Vec(vector_size=100, min_count=3, epochs=60, min_alpha=0.001, alpha=0.025)
+model.build_vocab(tagged_articles)
 model.train(tagged_articles, total_examples=model.corpus_count, epochs=model.epochs)
 
-# are we just loading the tagged vectors to the db, or should we run like KNN or KMeans ML model?
-train_vectors = [model.infer_vector(article.words) for article, _ in train_articles]
-test_vectors = [model.infer_vector(article.words) for article, _ in test_articles]
+train_vectors = [model.infer_vector(article.words) for article in train_articles]
+test_vectors = [model.infer_vector(article.words) for article in test_articles]
 
+# testing
 ranks = []
 second_ranks = []
-for doc_id in range(len(train_vectors)):
-    inferred_vector = model.infer_vector(train_vectors[doc_id].words)
-    sims = model.dv.most_similar([inferred_vector], topn=len(model.dv))
-    rank = [docid for docid, sim in sims].index(doc_id)
+# print(len(model.dv))
+for idx, doc_id in enumerate(train_articles):
+    # print('docid:', doc_id)
+    inferred_vector = model.infer_vector(train_articles[idx].words)
+    sims = model.dv.most_similar([inferred_vector])
+    # print(sims)
+    rank = [docid for docid, sim in sims].index(list(train_articles[idx].tags)[0])
     ranks.append(rank)
     second_ranks.append(sims[1])
 
 counter = collections.Counter(ranks)
-print(counter)
+# print(second_ranks)
+counter
