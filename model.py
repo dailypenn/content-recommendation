@@ -2,6 +2,7 @@ import collections
 import re
 import requests
 import datetime
+import json
 from gensim.models import Doc2Vec
 from gensim.models.doc2vec import TaggedDocument
 from gensim.utils import simple_preprocess
@@ -16,6 +17,7 @@ def create_tagged_document(article, tags):
 SECTIONS = ['news', 'sports', 'opinion']
 PAGES = 1
 ids = []
+articlesDict = dict()
 
 def clean_text(txt):
     clean = re.compile('(<.*?>)|(&nbsp;)|(&amp;)')
@@ -38,7 +40,13 @@ def scrape_data():
                 cleaned_article = clean_text(article['content'])
                 tagged_articles.append(create_tagged_document(cleaned_article, article['id']))
                 ids.append(article['id'])
-
+                articleDict = dict()
+                articleDict.update({"slug" : article['slug']})
+                articleDict.update({"headline" : article['headline']})
+                articleDict.update({"url" : article['dominantMedia']['attachment_uuid']})
+                articleDict.update({"timestamp" : convert_to_timestamp(article['published_at'])})
+                articlesDict.update({article['id'] : articleDict})
+print(articlesDict)
 scrape_data()
 print(len(ids))
 
