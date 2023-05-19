@@ -5,6 +5,9 @@ name = "pypi"
 
 [packages]
 requests = "*"
+gensim = "*"
+scikit-learn = "*"
+pymongo = "*"
 
 [dev-packages]
 
