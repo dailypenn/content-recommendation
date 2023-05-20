@@ -8,6 +8,7 @@ requests = "*"
 gensim = "*"
 scikit-learn = "*"
 pymongo = "*"
+redis = "*"
 
 [dev-packages]
 

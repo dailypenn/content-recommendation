@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"os/exec"
 
 	"github.com/joho/godotenv"
 	"github.com/redis/go-redis/v9"
@@ -44,11 +45,7 @@ func (vs *VectorSearch) InitializeSchema() {
 	)
 }
 
-func (vs *VectorSearch) RefreshRecentArticles(db *mongo.Database) error {
-	arr := make([]float64, 50)
-	for i := range arr {
-		arr[i] = 0.5
-	}
+func (vs *VectorSearch) RefreshRecentArticles(db *mongo.Database) error {  // rewrite this to use worker pools, or switch to python
 	coll := db.Collection("articles")
 	pipe := vs.rdb.Pipeline()
 	pipe.FlushDB(vs.ctx)
@@ -69,7 +66,8 @@ func (vs *VectorSearch) RefreshRecentArticles(db *mongo.Database) error {
 			doc["thumbnail_url"] = fmt.Sprintf("https://snworksceo.imgix.net/dpn/%s.sized-1000x1000.%s?w=800", attachmentUUID, fileExt)
 		}
 		doc["slug"] = fmt.Sprintf("%s/%s/%s", doc["createdat"].(string)[:4], doc["createdat"].(string)[5:7], doc["slug"])
-		doc["embedding"] = arr
+		fmt.Println(doc["slug"])
+		doc["embedding"], _ = GetEmbedding(doc["content"].(string))
 		var d Document
 		bb, _ := bson.Marshal(doc)
 		bson.Unmarshal(bb, &d)
@@ -92,4 +90,20 @@ func (vs *VectorSearch) RefreshRecentArticles(db *mongo.Database) error {
 
 func (vs *VectorSearch) query(slug string, db *mongo.Database) {
 	// TODO
+}
+
+func GetEmbedding(content string) ([]float64, error) {
+	if err := os.Chdir("."); err != nil {
+		return nil, fmt.Errorf("failed to set working directory: %v", err)
+	}
+	cmd := exec.Command("python3", "model_new.py", "-i", content)
+	out, err := cmd.CombinedOutput()
+	if err != nil {
+		return nil, fmt.Errorf("failed to run script: %v\noutput: %v", err, out)
+	}
+	var output []float64
+	if err = json.Unmarshal(out, &output); err != nil {
+		return nil, fmt.Errorf("failed to parse output as JSON: %v", err)
+	}
+	return output, nil
 }
