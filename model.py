@@ -2,11 +2,10 @@ import gensim
 import os
 import json
 import logging
-import argparse
 from pymongo import MongoClient
 from sklearn.model_selection import train_test_split
 
-# logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.INFO)
+logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.INFO)
 
 def download_data():
     uri = os.environ.get("MONGODB_URI")
@@ -29,18 +28,9 @@ def read_corpus(filepath, tokens_only=False):
 
 def train_model():
     train_corpus = list(read_corpus("data/training.json"))
-    test_corpus = list(read_corpus("data/training.json", tokens_only=True))
     assert gensim.models.doc2vec.FAST_VERSION > -1
     model = gensim.models.doc2vec.Doc2Vec(vector_size=50, epochs=20, min_count=10)
     model.build_vocab(train_corpus)
     model.train(train_corpus, total_examples=model.corpus_count, epochs=model.epochs)
     model.save("doc2vec.model")
     return model
-
-parser = argparse.ArgumentParser()
-parser.add_argument("-i", "--input", type=str, help="Generates a vector embedding from the input")
-args = parser.parse_args()
-if args.input:
-    model = gensim.models.doc2vec.Doc2Vec.load("doc2vec.model")
-    vector = model.infer_vector(gensim.utils.simple_preprocess(args.input))
-    print(list(vector))

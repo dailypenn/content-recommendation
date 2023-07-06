@@ -9,6 +9,9 @@ gensim = "*"
 scikit-learn = "*"
 pymongo = "*"
 redis = "*"
+fastapi = "*"
+uvicorn = "*"
+numpy = "*"
 
 [dev-packages]
 

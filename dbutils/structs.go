@@ -2,8 +2,6 @@ package dbutils
 
 import (
 	"context"
-
-	"github.com/redis/go-redis/v9"
 )
 
 type Response struct {
@@ -131,8 +129,4 @@ type Document struct {
 	CreatedAt	   string		 `json:"-"`
 	Thumbnail_url  string		 `json:"thumbnail_url"`
 	Embedding	   []float64     `json:"embedding"`
-}
-type VectorSearch struct {
-	ctx context.Context
-	rdb *redis.Client
 }
