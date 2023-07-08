@@ -2,8 +2,6 @@ package main
 
 import (
 	"context"
-	// "encoding/json"
-	// "fmt"
 	"log"
 	"os"
 
@@ -33,7 +31,4 @@ func main() {
 		}
 	}()
 
-	vs := dbutils.CreateRedisConn()
-	vs.RefreshRecentArticles(client.Database("Cluster"))
-	vs.InitializeSchema()
 }

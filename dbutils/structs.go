@@ -1,9 +1,5 @@
 package dbutils
 
-import (
-	"context"
-)
-
 type Response struct {
 	Section    Section    `json:"section"`
 	Articles   []Article  `json:"articles"`
@@ -107,7 +103,7 @@ type Article struct {
 	Tags           []Tag         `json:"tags"`
 	Authors        []Author      `json:"authors"`
 	DominantMedia  any           `json:"dominantMedia"`
-	Section        string
+	// Section        string
 	CTime		   int64
 	MTime		   int64
 	PTime		   int64
