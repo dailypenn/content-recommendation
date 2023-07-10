@@ -13,9 +13,10 @@ import (
 )
 
 const baseURL = "https://www.thedp.com/section/"
+
 var categories = []string{"news", "sports", "opinion"}
 
-func worker(id int, jobs <- chan string, db *mongo.Database) {
+func worker(id int, jobs <-chan string, db *mongo.Database) {
 	coll := db.Collection("articles")
 	for j := range jobs {
 		fmt.Printf("worker %d: processing url %s\n", id, j)
@@ -43,12 +44,12 @@ func worker(id int, jobs <- chan string, db *mongo.Database) {
 	}
 }
 
-func UploadArticles(db *mongo.Database) {
+func ImportArticles(numWorkers int, db *mongo.Database) {
 	start := time.Now()
 	jobs := make(chan string)
-	for w := 1; w <= 5; w++ {
-        go worker(w, jobs, db)
-    } 
+	for w := 1; w <= numWorkers; w++ {
+		go worker(w, jobs, db)
+	}
 
 	for _, category := range categories {
 		url := fmt.Sprintf("%s%s.json", baseURL, category)
@@ -59,7 +60,7 @@ func UploadArticles(db *mongo.Database) {
 	}
 
 	close(jobs)
-	fmt.Println(time.Since(start))
+	fmt.Printf("finished importing articles in %s", time.Since(start))
 }
 
 func FetchPage(url string) (*Response, error) {
