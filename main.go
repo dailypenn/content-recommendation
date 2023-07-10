@@ -19,6 +19,19 @@ func main() {
 	if err := godotenv.Load(); err != nil {
 		log.Println("no .env file found")
 	}
+	uri := os.Getenv("MONGODB_URI")
+	if uri == "" {
+		log.Fatal("You must set your 'MONGODB_URI' environmental variable. See\n\t https://www.mongodb.com/docs/drivers/go/current/usage-examples/#environment-variable")
+	}
+	client, err := mongo.Connect(context.TODO(), options.Client().ApplyURI(uri))
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer func() {
+		if err := client.Disconnect(context.TODO()); err != nil {
+			log.Fatal(err)
+		}
+	}()
 	switch os.Args[1] {
 	case "import":
 		importCmd := flag.NewFlagSet("import", flag.ExitOnError)
@@ -27,22 +40,9 @@ func main() {
 		if *numWorkers < 0 {
 			log.Fatal("number of workers must be greater than 0")
 		}
-		uri := os.Getenv("MONGODB_URI")
-		if uri == "" {
-			log.Fatal("You must set your 'MONGODB_URI' environmental variable. See\n\t https://www.mongodb.com/docs/drivers/go/current/usage-examples/#environment-variable")
-		}
-		client, err := mongo.Connect(context.TODO(), options.Client().ApplyURI(uri))
-		if err != nil {
-			log.Fatal(err)
-		}
-		defer func() {
-			if err := client.Disconnect(context.TODO()); err != nil {
-				log.Fatal(err)
-			}
-		}()
 		dbutils.ImportArticles(*numWorkers, client.Database("Cluster"))
 	case "update":
-		log.Fatal("not implemented")
+		dbutils.UpdateArticles(client.Database("Cluster"))
 	default:
 		log.Fatal("unknown subcommand")
 	}
