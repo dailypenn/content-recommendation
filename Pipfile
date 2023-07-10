@@ -12,6 +12,8 @@ redis = "*"
 fastapi = "*"
 uvicorn = "*"
 numpy = "*"
+black = "*"
+flake8 = "*"
 
 [dev-packages]
 

@@ -7,7 +7,9 @@ from pymongo import MongoClient
 from fastapi import FastAPI
 
 app = FastAPI()
-model = gensim.models.doc2vec.Doc2Vec.load("doc2vec.model")
+model = gensim.models.doc2vec.Doc2Vec.load(
+    os.path.join(os.getcwd(), "model", "doc2vec.model")
+)
 mongo_client = MongoClient(os.environ.get("MONGODB_URI"))
 redis_client = redis.Redis().from_url(os.environ.get("REDIS_URI"))
 top_k = 5
@@ -19,8 +21,9 @@ query = (
     .dialect(2)
 )
 
+
 @app.get("/recommend")
-def recommend(slug: str = ''):
+def recommend(slug: str = ""):
     vec = redis_client.hget(f"article:{slug}", "embedding")
     if vec:
         query_params = {"vec": vec}
@@ -28,7 +31,12 @@ def recommend(slug: str = ''):
         return results
     doc = mongo_client.Cluster.articles.find_one({"slug": slug})
     if doc:
-        embedding = [float(val) for val in list(model.infer_vector(gensim.utils.simple_preprocess(doc['content'])))]
+        embedding = [
+            float(val)
+            for val in list(
+                model.infer_vector(gensim.utils.simple_preprocess(doc["content"]))
+            )
+        ]
         byte_embedding = np.array(embedding, dtype=np.float32).tobytes()
         query_params = {"vec": byte_embedding}
         results = redis_client.ft("articles").search(query, query_params).docs
