@@ -7,7 +7,6 @@ import (
 	"os"
 
 	"github.com/dailypenn/content-recommendation/dbutils"
-	"github.com/joho/godotenv"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
@@ -15,9 +14,6 @@ import (
 func main() {
 	if len(os.Args) < 2 {
 		log.Fatal("no subcommand provided; options are import and update")
-	}
-	if err := godotenv.Load(); err != nil {
-		log.Println("no .env file found")
 	}
 	uri := os.Getenv("MONGODB_URI")
 	if uri == "" {

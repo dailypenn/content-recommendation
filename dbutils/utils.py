@@ -82,5 +82,5 @@ def refresh_recent_articles():
 
 
 if __name__ == "__main__":
-    # refresh_recent_articles()
+    refresh_recent_articles()
     initialize_schema()

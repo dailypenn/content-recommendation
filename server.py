@@ -1,7 +1,10 @@
 import gensim
 import os
 import redis
+import uvicorn
 import numpy as np
+import subprocess
+from dbutils import utils
 from redis.commands.search.query import Query
 from pymongo import MongoClient
 from fastapi import FastAPI
@@ -42,3 +45,19 @@ def recommend(slug: str = ""):
         results = redis_client.ft("articles").search(query, query_params).docs
         return results
     return None
+
+
+if __name__ == "__main__":
+    subprocess.Popen(
+        [
+            "redis-server",
+            "--loadmodule",
+            "/opt/redis-stack/lib/redisearch.so",
+            "--port",
+            "6379",
+            "--save",
+        ]
+    )
+    utils.refresh_recent_articles()
+    utils.initialize_schema()
+    uvicorn.run("server:app", port=8080, host="0.0.0.0")
