@@ -2,7 +2,8 @@ import os
 import gensim
 import redis
 import numpy as np
-from redis.commands.search.field import TextField, VectorField
+from datetime import datetime
+from redis.commands.search.field import TextField, NumericField, VectorField
 from redis.commands.search.indexDefinition import IndexDefinition, IndexType
 from pymongo import MongoClient
 
@@ -13,6 +14,7 @@ def initialize_schema():
         TextField("slug"),
         TextField("headline"),
         TextField("thumbnail_url"),
+        NumericField("timestamp"),
         VectorField(
             "embedding",
             algorithm="FLAT",
@@ -38,19 +40,15 @@ def refresh_recent_articles():
     redis_client = redis.Redis().from_url(os.environ.get("REDIS_URI"))
     pipe = redis_client.pipeline()
     pipe.flushdb()
-    cursor = (
-        mongo_client.Cluster.articles.find(
-            {},
-            projection={
-                "slug": 1,
-                "headline": 1,
-                "dominantmedia": 1,
-                "content": 1,
-                "createdat": 1,
-            },
-        )
-        .sort("ctime", -1)
-        .limit(1000)
+    cursor = mongo_client.Cluster.articles.find(
+        {},
+        projection={
+            "slug": 1,
+            "headline": 1,
+            "dominantmedia": 1,
+            "content": 1,
+            "createdat": 1,
+        },
     )
     for doc in cursor:
         embedding = [
@@ -61,23 +59,24 @@ def refresh_recent_articles():
         ]
         byte_embedding = np.array(embedding, dtype=np.float32).tobytes()
         key = doc["slug"]
+        print(doc["createdat"])
         pipe.hset(
             name=f"article:{key}",
             mapping={
                 "slug": key,
                 "headline": doc["headline"],
                 "embedding": byte_embedding,
+                "timestamp": datetime.strptime(
+                    doc["createdat"], "%Y-%m-%d %H:%M:%S"
+                ).timestamp(),
                 "thumbnail_url": f'https://snworksceo.imgix.net/dpn/{doc["dominantmedia"]["attachment_uuid"]}.sized-1000x1000.{doc["dominantmedia"]["extension"]}?w=800'
                 if "dominantmedia" in doc and isinstance(doc["dominantmedia"], dict)
                 else "",
             },
         )
-    count = len(pipe) - 1
-    print(
-        "Error refreshing articles."
-        if False in pipe.execute()
-        else f"Successfully refreshed {count} articles."
-    )
+    total = len(pipe) - 1
+    res = pipe.execute()
+    print(f"Successfully refreshed {res.count(5)} articles out of {total} total.")
     cursor.close()
 
 
