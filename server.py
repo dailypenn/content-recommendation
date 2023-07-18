@@ -1,4 +1,3 @@
-import gensim
 import os
 import redis
 import uvicorn
@@ -6,19 +5,23 @@ import subprocess
 from datetime import datetime, timedelta
 from dbutils import utils
 from redis.commands.search.query import Query
-from pymongo import MongoClient
 from fastapi import FastAPI
+from fastapi_cache import FastAPICache
+from fastapi_cache.backends.inmemory import InMemoryBackend
+from fastapi_cache.decorator import cache
 
 app = FastAPI()
-model = gensim.models.doc2vec.Doc2Vec.load(
-    os.path.join(os.getcwd(), "model", "doc2vec.model")
-)
-mongo_client = MongoClient(os.environ.get("MONGODB_URI"))
 redis_client = redis.Redis().from_url(os.environ.get("REDIS_URI"))
 top_k = 5
 
 
+@app.on_event("startup")
+async def startup():
+    FastAPICache.init(InMemoryBackend())
+
+
 @app.get("/recommend")
+@cache(expire=60 * 60)
 def recommend(slug: str = ""):
     vec = redis_client.hget(f"article:{slug}", "embedding")
     if vec:
