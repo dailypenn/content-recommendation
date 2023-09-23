@@ -1,0 +1,22 @@
+[[source]]
+url = "https://pypi.org/simple"
+verify_ssl = true
+name = "pypi"
+
+[packages]
+requests = "*"
+gensim = "*"
+scikit-learn = "*"
+pymongo = "*"
+redis = "*"
+fastapi = "*"
+uvicorn = "*"
+numpy = "*"
+black = "*"
+flake8 = "*"
+fastapi-cache2 = "*"
+
+[dev-packages]
+
+[requires]
+python_version = "3.10"
