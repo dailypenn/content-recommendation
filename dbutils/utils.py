@@ -59,7 +59,6 @@ def refresh_recent_articles():
         ]
         byte_embedding = np.array(embedding, dtype=np.float32).tobytes()
         key = doc["slug"]
-        print(doc["createdat"])
         pipe.hset(
             name=f"article:{key}",
             mapping={

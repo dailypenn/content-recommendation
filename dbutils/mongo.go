@@ -80,7 +80,6 @@ func UpdateArticles(db *mongo.Database) {
 			var result bson.M
 			for i := range page.Articles {
 				if err := coll.FindOne(context.TODO(), bson.D{{"_id", page.Articles[i].ID}}).Decode(&result); err != nil {
-					fmt.Println(err)
 					page.Articles[i].Content = cleanText(page.Articles[i].Content)
 					page.Articles[i].Abstract = cleanText(page.Articles[i].Abstract)
 					page.Articles[i].Infobox = cleanText(page.Articles[i].Infobox)
