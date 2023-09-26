@@ -1,2 +1,2 @@
-*/5 * * * * ./content-recommendation update
-0 0 * * * python3 utils.py
+* * * * * ./content-recommendation update >> /var/log/cron.log 2>&1
+0 0 * * * python3 dbutils/utils.py >> /var/log/cron.log 2>&1
