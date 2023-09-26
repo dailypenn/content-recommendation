@@ -12,8 +12,7 @@ RUN apt-get update && apt-get install -y python3 python3-pip curl procps cron vi
 ADD crontab /etc/cron.d/cronjobs 
 RUN chmod 0644 /etc/cron.d/cronjobs && \ 
     crontab /etc/cron.d/cronjobs && \
-    touch /var/log/cron.log && \
-    env >> /etc/environment
+    touch /var/log/cron.log
 RUN rm /usr/lib/python3.11/EXTERNALLY-MANAGED
 RUN pip3 install pipenv
 RUN pipenv install --system --deploy
