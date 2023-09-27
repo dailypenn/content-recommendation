@@ -88,13 +88,7 @@ if __name__ == "__main__":
         utils.refresh_recent_articles()
         utils.initialize_schema()
     if not args.dev:
-        subprocess.run(
-            [
-                "env",
-                ">>",
-                "/etc/environment",
-                "&&",
-                "cron",
-            ]
-        )
+        with open("/etc/environment", "w") as f:
+            subprocess.run(["env"], stdout=f)
+        subprocess.run(["cron"])
     uvicorn.run("server:app", port=8080, host="0.0.0.0")

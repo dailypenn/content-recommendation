@@ -21,6 +21,8 @@ docker run -d --name redis-stack -p 6379:6379 redis/redis-stack-server:latest
 You will also need to set the following environment variables
 - `MONGO_URL`
 - `REDIS_URL`
+- `SITE_URL`
+- `CATEGORIES`
 
 If you are running the server for the first time, run `pipenv install`. Then you can run 
 ```

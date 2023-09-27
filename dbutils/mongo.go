@@ -5,7 +5,10 @@ import (
 	"encoding/json"
 	"fmt"
 	"html"
+	"log"
 	"net/http"
+	"os"
+	"strings"
 	"time"
 
 	"github.com/microcosm-cc/bluemonday"
@@ -13,9 +16,22 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
-const baseURL = "https://www.thedp.com/section/"
+var baseURL string
+var categories []string
 
-var categories = []string{"news", "sports", "opinion"}
+func init() {
+	var c = os.Getenv("CATEGORIES")
+	if c == "" {
+		log.Fatal("You must set the CATEGORIES environment variable")
+	}
+	categories = strings.Split(c, ",")
+
+	var b = os.Getenv("SITE_URL")
+	if b == "" {
+		log.Fatal("You must set the BASE_URL environment variable")
+	}
+	baseURL = fmt.Sprintf("%s/section/", b)
+}
 
 func worker(id int, jobs <-chan string, db *mongo.Database) {
 	coll := db.Collection("articles")
