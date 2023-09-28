@@ -1,3 +1,4 @@
+import argparse
 import os
 import gensim
 import redis
@@ -32,9 +33,12 @@ def initialize_schema():
         print("Succesfully created index 'articles'.")
 
 
-def refresh_recent_articles():
+def refresh_recent_articles(cron=False):
     model = gensim.models.doc2vec.Doc2Vec.load(
         os.path.join(os.getcwd(), "model", "doc2vec.model")
+        if not cron
+        else os.path.join("/data", "model", "doc2vec.model")
+        # temp fix lol
     )
     mongo_client = MongoClient(os.environ.get("MONGODB_URI"))
     redis_client = redis.Redis().from_url(os.environ.get("REDIS_URI"))
@@ -80,5 +84,10 @@ def refresh_recent_articles():
 
 
 if __name__ == "__main__":
-    refresh_recent_articles()
+    parser = argparse.ArgumentParser(
+        description="Refresh and re-index articles in Redis"
+    )
+    parser.add_argument("--cron", action="store_true", help="Run via cronjob")
+    args = parser.parse_args()
+    refresh_recent_articles(args.cron)
     initialize_schema()
