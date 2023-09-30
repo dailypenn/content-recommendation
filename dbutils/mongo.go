@@ -8,6 +8,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"strconv"
 	"strings"
 	"time"
 
@@ -53,6 +54,13 @@ func worker(id int, jobs <-chan string, db *mongo.Database) {
 			page.Articles[i].CTime = cTime.Unix()
 			page.Articles[i].MTime = mTime.Unix()
 			page.Articles[i].PTime = pTime.Unix()
+			cMonth := ""
+			if cTime.Month() < 10 {
+				cMonth = fmt.Sprintf("0%d", int(cTime.Month()))
+			} else {
+				cMonth = strconv.Itoa(int(cTime.Month()))
+			}
+			page.Articles[i].Slug = fmt.Sprintf("%d/%s/%s", cTime.Year(),  cMonth, page.Articles[i].Slug)
 			articlesInterface = append(articlesInterface, page.Articles[i])
 		}
 		if _, err = coll.InsertMany(context.TODO(), articlesInterface); err != nil {
@@ -105,6 +113,13 @@ func UpdateArticles(db *mongo.Database) {
 					page.Articles[i].CTime = cTime.Unix()
 					page.Articles[i].MTime = mTime.Unix()
 					page.Articles[i].PTime = pTime.Unix()
+					cMonth := ""
+					if cTime.Month() < 10 {
+						cMonth = fmt.Sprintf("0%d", int(cTime.Month()))
+					} else {
+						cMonth = strconv.Itoa(int(cTime.Month()))
+					}
+					page.Articles[i].Slug = fmt.Sprintf("%d/%s/%s", cTime.Year(),  cMonth, page.Articles[i].Slug)
 					articlesInterface = append(articlesInterface, page.Articles[i])
 				} else {
 					p = false
