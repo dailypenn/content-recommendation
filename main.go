@@ -23,6 +23,10 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
+	err = client.Ping(context.TODO(), nil)
+	if err != nil {
+		log.Fatal(err)
+	}
 	defer func() {
 		if err := client.Disconnect(context.TODO()); err != nil {
 			log.Fatal(err)
