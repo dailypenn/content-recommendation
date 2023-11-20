@@ -12,7 +12,7 @@ from pymongo import MongoClient
 def initialize_schema():
     redis_client = redis.Redis().from_url(os.environ.get("REDIS_URI"))
     schema = (
-        TextField("slug"),
+        TextField("uuid"),
         TextField("headline"),
         TextField("thumbnail_url"),
         NumericField("timestamp"),
@@ -47,7 +47,7 @@ def refresh_recent_articles(cron=False):
     cursor = mongo_client.Cluster.articles.find(
         {},
         projection={
-            "slug": 1,
+            "uuid": 1,
             "headline": 1,
             "dominantmedia": 1,
             "content": 1,
@@ -62,11 +62,10 @@ def refresh_recent_articles(cron=False):
             )
         ]
         byte_embedding = np.array(embedding, dtype=np.float32).tobytes()
-        key = doc["slug"]
         pipe.hset(
-            name=f"article:{key}",
+            name=f"article:{doc['uuid']}",
             mapping={
-                "slug": key,
+                "uuid": doc["uuid"],
                 "headline": doc["headline"],
                 "embedding": byte_embedding,
                 "timestamp": datetime.strptime(

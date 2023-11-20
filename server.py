@@ -30,7 +30,7 @@ async def startup():
 
 @app.get("/recommend")
 @cache(expire=60 * 60)
-def recommend(slug: str = ""):
+def recommend(uuid: str = ""):
     dt = datetime.now() - timedelta(
         days=90
     )  # only show articles published in the last 90 days
@@ -39,15 +39,16 @@ def recommend(slug: str = ""):
             f"(@timestamp:[({dt.timestamp()} inf])=>[KNN {top_k + 1} @embedding $vec as score]"
         )
         .sort_by("score")
-        .return_fields("slug", "headline", "thumbnail_url")
+        .return_fields("uuid", "headline", "thumbnail_url")
         .dialect(2)
     )
-    vec = redis_client.hget(f"article:{slug}", "embedding")
+    key = f"article:{uuid}"
+    vec = redis_client.hget(key, "embedding")
     if vec:
         query_params = {"vec": vec}
         results = redis_client.ft("articles").search(query, query_params).docs
-        return results[1:] if results[0]["slug"] == slug else results[:-1]
-    doc = mongo_client.Cluster.articles.find_one({"slug": slug})
+        return results[1:] if results[0]["id"] == key else results[:-1]
+    doc = mongo_client.Cluster.articles.find_one({"uuid": uuid})
     if doc:
         embedding = [
             float(val)
@@ -58,7 +59,7 @@ def recommend(slug: str = ""):
         byte_embedding = np.array(embedding, dtype=np.float32).tobytes()
         query_params = {"vec": byte_embedding}
         results = redis_client.ft("articles").search(query, query_params).docs
-        return results[1:] if results[0]["slug"] == slug else results[:-1]
+        return results[1:] if results[0]["id"] == key else results[:-1]
     return None
 
 
