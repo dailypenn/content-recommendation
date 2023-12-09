@@ -54,6 +54,14 @@ def refresh_recent_articles(cron=False):
             "createdat": 1,
         },
     )
+    site_url = os.environ.get("SITE_URL")
+    if "34st" in site_url:
+        tag = "-34s"
+    elif "underthebutton" in site_url:
+        tag = "-utb"
+    else:
+        tag = ""
+
     for doc in cursor:
         embedding = [
             float(val)
@@ -71,7 +79,7 @@ def refresh_recent_articles(cron=False):
                 "timestamp": datetime.strptime(
                     doc["createdat"], "%Y-%m-%d %H:%M:%S"
                 ).timestamp(),
-                "thumbnail_url": f'https://snworksceo.imgix.net/dpn/{doc["dominantmedia"]["attachment_uuid"]}.sized-1000x1000.{doc["dominantmedia"]["extension"]}?w=800'
+                "thumbnail_url": f'https://snworksceo.imgix.net/dpn{tag}/{doc["dominantmedia"]["attachment_uuid"]}.sized-1000x1000.{doc["dominantmedia"]["extension"]}?w=800'
                 if "dominantmedia" in doc and isinstance(doc["dominantmedia"], dict)
                 else "",
             },
