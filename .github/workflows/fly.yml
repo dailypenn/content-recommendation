@@ -4,30 +4,54 @@ on:
     branches:
       - main
 jobs:
+  build-and-push:
+    name: Build and Push Docker Image
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v1
+      - name: Login to Docker Hub
+        uses: docker/login-action@v1
+        with:
+          username: ${{ secrets.DOCKER_HUB_USERNAME }}
+          password: ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
+      - name: Build and push
+        uses: docker/build-push-action@v2
+        with:
+          context: .
+          push: true
+          tags: ${{ secrets.DOCKER_HUB_USERNAME }}/content-recommendation:latest
+
   deploy-dp:
     name: Deploy-DP
+    needs: build-and-push
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
       - uses: superfly/flyctl-actions/setup-flyctl@master
-      - run: flyctl deploy --app dp-recommender --remote-only --wait-timeout 1500
+      - run: flyctl deploy --app dp-recommender --image ${{ secrets.DOCKER_HUB_USERNAME }}/content-recommendation:latest --remote-only --wait-timeout 1500
         env:
           FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
+
   deploy-34st:
     name: Deploy-34st
+    needs: build-and-push
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
       - uses: superfly/flyctl-actions/setup-flyctl@master
-      - run: flyctl deploy --app 34st-recommender --remote-only --wait-timeout 600
+      - run: flyctl deploy --app 34st-recommender --image ${{ secrets.DOCKER_HUB_USERNAME }}/content-recommendation:latest --remote-only --wait-timeout 600
         env:
           FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
+
   deploy-utb:
     name: Deploy-UTB
+    needs: build-and-push
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
       - uses: superfly/flyctl-actions/setup-flyctl@master
-      - run: flyctl deploy --app utb-recommender --remote-only --wait-timeout 300
+      - run: flyctl deploy --app utb-recommender --image ${{ secrets.DOCKER_HUB_USERNAME }}/content-recommendation:latest --remote-only --wait-timeout 300
         env:
           FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
